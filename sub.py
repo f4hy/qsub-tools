@@ -103,7 +103,10 @@ def write(defaults,filename):
 
     outfile=open(newfilename,'w')
     outfile.write(filetext)
+    outfile.flush()
+    outfile.close()
 
+    
     if os.uname()[1] == 'erwin':
         if readinput.askyesno("submit %s" % newfilename):
             print "qsubing %s" %newfilename
