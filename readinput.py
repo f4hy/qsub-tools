@@ -120,7 +120,9 @@ def readgeom(default=[1,1,1,1]):
             return default
         try:
             x,y,z,t = ans.split(' ')
-            if not all(map(String.isdigit,ans.split(' '))):
+            print x,y,z,t
+            print ans.split(' ')
+            if not all( s.isdigit() for s in ans.split(' ')):
                 print "not valid numbers"
                 continue
         except ValueError:
