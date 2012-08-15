@@ -13,7 +13,7 @@ def choices(c):
 def selectchoices(c,default=None,startnum=0):
 
     if default and default not in c:
-        raise Exception("default choice not in choices")
+        raise Exception("default choice %s not in choices" % str(default))
     
     if default:
         prompt = "please select\n"
