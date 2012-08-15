@@ -63,7 +63,7 @@ def askqueue(defaultqueue="red"):
 
 def askrange(start=1,end=1,defaultval=1):
     defaultval = min(max(start,defaultval),end)     # make sure default is in the range
-    return selectchoices(list(range(start,end)),default=defaultval,startnum=start)
+    return selectchoices(list(range(start,end+1)),default=defaultval,startnum=start)
 
     
 def askdir(description,default=os.getcwd()):
