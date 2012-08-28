@@ -19,8 +19,8 @@ def display_usage():
 def return_first_empty():
     qstat = check_output("qstat")
     for q in queues:
-        if q.count(q) == 0:
+        if qstat.count(q) == 0:
             return q
-            return None
+    return None
             
     
