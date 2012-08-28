@@ -43,13 +43,17 @@ def read(filename):
     matchpermdir = re.search('PERMDIR="(.+)"', filetext)
     permdir = matchpermdir.group(1)
 
+    matchcput = re.search('#PBS -l *cput=(\d+)', filetext)
+    cput = matchcput.group(1)
+    
     print "Name %s" % name
     print "Nodes %d, PPN %d" % (nodes, ppn)
     print "Queue %s" % queue
+    print "cput hours %s" % cput
     print geom
     print "permdir %s" % permdir
 
-    return (name, nodes, ppn, queue, geom, permdir)
+    return (name, nodes, ppn, queue, geom, permdir, cput)
 
 
 def write(defaults, filename):
@@ -67,10 +71,12 @@ def write(defaults, filename):
         noderange = 12
         ppn = 32
         sockets = 8
+        cput = 5000
     else:
         noderange = 8
         ppn = 8
         sockets = 2
+        cput=1000
 
     sys.stdout.write("select number of nodes (was %d)\n" % nodes)
 
