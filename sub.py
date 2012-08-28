@@ -72,7 +72,7 @@ def write(defaults, filename):
         if queue != "red":
             oldqueue = queue
             queue = qstat.return_first_empty()
-            print "empty queue is %s" %q
+            print "empty queue is %s" %queue
             if queue == None:
                 queue = oldqueue
 
