@@ -7,6 +7,7 @@ import sys
 import re
 import readinput
 import os
+import qstat
 from subprocess import call
 
 
@@ -61,11 +62,21 @@ def write(defaults, filename):
     filetext = file.read()
     file.close()
 
-    name, nodes, ppn, queue, geom, permdir = defaults
+    name, nodes, ppn, queue, geom, permdir, cput = defaults
 
     name = readinput.askstring("Set job name", name)
 
-    queue = readinput.askqueue()
+    if os.uname()[1] == 'erwin':
+        qstat.display_usage()
+        # IF we are on a non red queue currently, find the best one
+        if queue != "red":
+            oldqueue = queue
+            queue = qstat.return_first_empty()
+            if queue == None:
+                queue = oldqueue
+
+        
+    queue = readinput.askqueue(queue)
 
     if queue == "red":
         noderange = 12
@@ -95,11 +106,14 @@ def write(defaults, filename):
     else:
         geom = readinput.readgeom(geom)
 
+    
+        
     filetext = re.sub('#PBS -N (.*)', '#PBS -N %s' % name, filetext)
     filetext = re.sub('#PBS -l nodes=(\d+):ppn=(\d+)', "#PBS -l nodes=%d:ppn=%d" % (nodes, ppn), filetext)
     filetext = re.sub('#PBS -q (.+)', "#PBS -q %s" % queue, filetext)
     filetext = re.sub('GEOM="(\d+) (\d+) (\d+) (\d+)"', 'GEOM="%d %d %d %d"' % tuple(geom), filetext)
     filetext = re.sub('PERMDIR="(.+)"', 'PERMDIR="%s"' % permdir, filetext)
+    filetext = re.sub('#PBS -l *cput=(\d+)', '#PBS -l cput=%s'% cput , filetext)
 
     print filetext
 
@@ -116,7 +130,7 @@ def write(defaults, filename):
             print "qsubing %s" % newfilename
             call(["qsub", newfilename])
 
-    if readinput.askyesno("move %s to %s" % (newfilename, filename), False):
+    if readinput.askyesno("move %s to %s" % (newfilename, filename)):
         print "moving %s to %s" % (newfilename, filename)
         call(["mv", newfilename, filename])
 
