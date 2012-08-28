@@ -4,7 +4,7 @@ import os
 
 bold = "\033[1;37m"
 reset = "\033[0;0m"
-queues = ("red", "blue", "cyan", "green", "magenta")
+queues = ("green", "blue", "cyan", "magenta", "red")
 
 
 def choices(c):
