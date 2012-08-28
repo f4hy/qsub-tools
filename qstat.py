@@ -13,7 +13,7 @@ def display_usage():
     qstat = check_output("qstat")
 
     for q in queues:
-        sys.stdout.write("%s has %d jobs" % (q,qstat.count(q)))
+        sys.stdout.write("%s has\t\t %d jobs\n" % (q,qstat.count(q)))
 
 def return_first_empty():
     qstat = check_output("qstat")
