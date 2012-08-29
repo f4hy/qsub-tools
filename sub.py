@@ -45,6 +45,7 @@ def read(filename):
     matchpermdir = re.search('PERMDIR="(.+)"', filetext)
     permdir = matchpermdir.group(1)
 
+    # find #PBS -l cput=1000:00:00
     matchcput = re.search('#PBS -l *cput=(\d+)', filetext)
     cput = matchcput.group(1)
     
