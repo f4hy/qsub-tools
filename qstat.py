@@ -14,7 +14,7 @@ def display_usage():
     size = max((len(q) for q in queues))
     
     for q in queues:
-        sys.stdout.write("%s has\t\t %d jobs\n" % (q.ljust(size),qstat.count(q)))
+        sys.stdout.write("%s has\t\t %d jobs\n" % (q.ljust(size), qstat.count(q)))
 
 def return_first_empty():
     qstat = check_output("qstat")
