@@ -57,10 +57,11 @@ def read(filename):
     return (name, nodes, ppn, queue, geom, permdir, cput)
 
 
+
 def write(defaults, filename):
-    file = open(filename)
-    filetext = file.read()
-    file.close()
+    writefile = open(filename)
+    filetext = writefile.read()
+    writefile.close()
 
     name, nodes, ppn, queue, geom, permdir, cput = defaults
 
@@ -72,7 +73,7 @@ def write(defaults, filename):
         if queue != "red":
             oldqueue = queue
             queue = qstat.return_first_empty()
-            print "empty queue is %s" %queue
+            print "empty queue is %s" % queue
             if queue == None:
                 queue = oldqueue
 
@@ -88,7 +89,7 @@ def write(defaults, filename):
         noderange = 8
         ppn = 8
         sockets = 2
-        cput=1000
+        cput = 1000
 
     sys.stdout.write("select number of nodes (was %d)\n" % nodes)
 
@@ -110,9 +111,17 @@ def write(defaults, filename):
     
         
     filetext = re.sub('#PBS -N (.*)', '#PBS -N %s' % name, filetext)
-    filetext = re.sub('#PBS -l nodes=(\d+):ppn=(\d+)', "#PBS -l nodes=%d:ppn=%d" % (nodes, ppn), filetext)
+
+    node_search_text = '#PBS -l nodes=(\d+):ppn=(\d+)' 
+    node_replace_text = "#PBS -l nodes=%d:ppn=%d" % (nodes, ppn)
+    filetext = re.sub(node_search_text, node_replace_text, filetext)
+
     filetext = re.sub('#PBS -q (.+)', "#PBS -q %s" % queue, filetext)
-    filetext = re.sub('GEOM="(\d+) (\d+) (\d+) (\d+)"', 'GEOM="%d %d %d %d"' % tuple(geom), filetext)
+
+    geom_search_text = 'GEOM="(\d+) (\d+) (\d+) (\d+)"'
+    geom_replace_text = 'GEOM="%d %d %d %d"' % tuple(geom)
+    filetext = re.sub(geom_search_text, geom_replace_text, filetext)
+
     filetext = re.sub('PERMDIR="(.+)"', 'PERMDIR="%s"' % permdir, filetext)
     filetext = re.sub('#PBS -l *cput=(\d+)', '#PBS -l cput=%s'% cput , filetext)
 
@@ -138,10 +147,10 @@ def write(defaults, filename):
 if len(sys.argv) != 2:
     usage()
 
-filename = sys.argv[1]
+script_filename = sys.argv[1]
 
-defaults = read(filename)
+read_defaults = read(script_filename)
 
-write(defaults, filename)
+write(read_defaults, script_filename)
 
 print "done"
