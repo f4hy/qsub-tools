@@ -119,7 +119,7 @@ def askyesno(description, default=True):
             return False
 
 
-def readgeom(default=[1, 1, 1, 1]):
+def readgeom(default=(1, 1, 1, 1)):
     while True:
         ans = raw_input("Input gemoetry ('%d %d %d %d')" % tuple(default))
         if not ans:
@@ -134,7 +134,7 @@ def readgeom(default=[1, 1, 1, 1]):
         except ValueError:
             print 'invalid form for geom must be like "1 1 1 2"'
             continue
-        return map(int, ans.split(' '))
+        return [int(i) for i in ans.split(' ')]
 
 
 if __name__ == '__main__':
