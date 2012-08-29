@@ -103,9 +103,9 @@ def askstring(description, default=""):
 
 def askyesno(description, default=True):
     if default:
-        prompt = "%s [Y]/n " % description
+        prompt = "%s [%sY%s]/n " % (description, bold, reset)
     else:
-        prompt = "%s y/[N] " % description
+        prompt = "%s y/[%sN%s] " % (description, bold, reset)
     while True:
         ans = raw_input(prompt)
         if not ans:
