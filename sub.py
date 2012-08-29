@@ -21,9 +21,10 @@ def read(filename):
     print sys.argv
 
     print "reading %s" % filename
-    file = open(filename)
-    filetext = file.read()
-
+    readfile = open(filename)
+    filetext = readfile.read()
+    readfile.close()
+    
     # find #PBS -N gaugeandmeasurerun
     matchname = re.search('#PBS -N (.*)', filetext)
     name = matchname.group(1)
@@ -130,10 +131,8 @@ def write(defaults, filename):
     newfilename = filename + ".tosub"
     print "writing %s" % newfilename
 
-    outfile = open(newfilename, 'w')
-    outfile.write(filetext)
-    outfile.flush()
-    outfile.close()
+    with open(newfilename, 'w') as outfile:
+        outfile.write(filetext)
 
     if os.uname()[1] == 'erwin':
         if readinput.askyesno("submit %s" % newfilename):
