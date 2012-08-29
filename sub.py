@@ -10,6 +10,10 @@ import os
 import qstat
 from subprocess import call
 
+# noderange,ppn,sockets,cput
+red_settings = (12, 32, 8, 5000)
+other_settings = (8, 8, 2, 1000)
+
 
 def usage():
     print """Usage:
@@ -83,15 +87,9 @@ def write(defaults, filename):
     queue = readinput.askqueue(queue)
 
     if queue == "red":
-        noderange = 12
-        ppn = 32
-        sockets = 8
-        cput = 5000
+        noderange, ppn, sockets, cput = red_settings
     else:
-        noderange = 8
-        ppn = 8
-        sockets = 2
-        cput = 1000
+        noderange, ppn, sockets, cput = other_settings
 
     sys.stdout.write("select number of nodes (was %d)\n" % nodes)
 
