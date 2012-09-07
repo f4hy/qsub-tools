@@ -103,7 +103,9 @@ def write(defaults, filename):
 
     optimalgeom = [1, 1, 1, sockets * nodes]
 
-    if readinput.askyesno("use optimal GEOM=%d,%d,%d,%d" % tuple(optimalgeom)):
+    if readinput.askyesno("use previous GEOM=%d,%d,%d,%d" % tuple(geom)):
+        pass
+    elif readinput.askyesno("use optimal GEOM=%d,%d,%d,%d" % tuple(optimalgeom)):
         geom = optimalgeom
     else:
         geom = readinput.readgeom(geom)
