@@ -44,7 +44,12 @@ def read(filename):
 
     # find GEOM="1 1 1 8"
     matchgeom = re.search('GEOM="(\d+) (\d+) (\d+) (\d+)"', filetext)
-    geom = [int(matchgeom.group(i)) for i in range(1, 5)]
+    try:
+        geom = [int(matchgeom.group(i)) for i in range(1, 5)]
+    except AttributeError:
+        print "WARNING: Geom not found"
+        geom = None
+
 
     # find PERMDIR="/latticeQCD/raid3/bfahy/develop/gaugeandmeasure/iso"
     matchpermdir = re.search('PERMDIR="(.+)"', filetext)
@@ -54,26 +59,26 @@ def read(filename):
     matchcput = re.search('#PBS -l *cput=(\d+)', filetext)
     cput = matchcput.group(1)
 
-    #find CHROMAINPUTFILE="gaugeandmeasuretest.xml"
-    matchxmlfilename = re.search('CHROMAINPUTFILE="(.+)"', filetext)
+    if geom is None:
+        layout = None
+    else:
+        #find CHROMAINPUTFILE="gaugeandmeasuretest.xml"
+        matchxmlfilename = re.search('CHROMAINPUTFILE="(.+)"', filetext)
+        xmlfilename = matchxmlfilename.group(1)
 
-    xmlfilename = matchxmlfilename.group(1)
-
-    # print xmlfilename
-    if xmlfilename:
-        try:
-            xmlfile = open(xmlfilename)
-            xmlfiletext = xmlfile.read()
-            # match         <nrow>16 16 16 36</nrow>
-            matchlayout = re.search('<nrow>(\d+) (\d+) (\d+) (\d+)</nrow>',xmlfiletext)
-            layout = [int(matchlayout.group(i)) for i in range(1, 5)]
-        except IOError:
-            print "Error! {} file not found".format(xmlfilename)
-            exit(0)
-        except AttributeError:
-            print "WARNING: no chroma config file"
-            layout = None
-
+        if xmlfilename:
+            try:
+                xmlfile = open(xmlfilename)
+                xmlfiletext = xmlfile.read()
+                # match         <nrow>16 16 16 36</nrow>
+                matchlayout = re.search('<nrow>(\d+) (\d+) (\d+) (\d+)</nrow>',xmlfiletext)
+                layout = [int(matchlayout.group(i)) for i in range(1, 5)]
+            except IOError:
+                print "Error! {} file not found".format(xmlfilename)
+                exit(0)
+            except AttributeError:
+                print "WARNING: no chroma config file"
+                layout = None
 
     print "Name %s" % name
     print "Nodes %d, PPN %d" % (nodes, ppn)
@@ -129,27 +134,27 @@ def write(defaults, filename):
     else:
         permdir = readinput.askdir("Set perm directory", permdir)
 
+    if geom is not None:
+        cores = ppn*nodes
 
-    cores = ppn*nodes
+        coresleft = cores
+        optimalgeom = []
+        for latticesize in reversed(layout):
+            print latticesize
+            optimal = gcd(coresleft,latticesize) # put at the begining
+            optimalgeom.insert(0,optimal)
+            coresleft = coresleft / optimal
 
-    coresleft = cores
-    optimalgeom = []
-    for latticesize in reversed(layout):
-        print latticesize
-        optimal = gcd(coresleft,latticesize) # put at the begining
-        optimalgeom.insert(0,optimal)
-        coresleft = coresleft / optimal
+        if coresleft != 1:
+            print "unable to find optimal geom"
+            optimalgeom = None
 
-    if coresleft != 1:
-        print "unable to find optimal geom"
-        optimalgeom = None
-        
-    if optimalgeom and readinput.askyesno("use optimal GEOM=%d,%d,%d,%d" % tuple(optimalgeom)):
-        geom = optimalgeom
-    elif readinput.askyesno("use previous GEOM=%d,%d,%d,%d" % tuple(geom)):
-        pass
-    else:
-        geom = readinput.readgeom(geom)
+        if optimalgeom and readinput.askyesno("use optimal GEOM=%d,%d,%d,%d" % tuple(optimalgeom)):
+            geom = optimalgeom
+        elif readinput.askyesno("use previous GEOM=%d,%d,%d,%d" % tuple(geom)):
+            pass
+        else:
+            geom = readinput.readgeom(geom)
 
     filetext = re.sub('#PBS -N (.*)', '#PBS -N %s' % name, filetext)
 
@@ -159,9 +164,10 @@ def write(defaults, filename):
 
     filetext = re.sub('#PBS -q (.+)', "#PBS -q %s" % queue, filetext)
 
-    geom_search_text = 'GEOM="(\d+) (\d+) (\d+) (\d+)"'
-    geom_replace_text = 'GEOM="%d %d %d %d"' % tuple(geom)
-    filetext = re.sub(geom_search_text, geom_replace_text, filetext)
+    if geom is not None:
+        geom_search_text = 'GEOM="(\d+) (\d+) (\d+) (\d+)"'
+        geom_replace_text = 'GEOM="%d %d %d %d"' % tuple(geom)
+        filetext = re.sub(geom_search_text, geom_replace_text, filetext)
 
     filetext = re.sub('PERMDIR="(.+)"', 'PERMDIR="%s"' % permdir, filetext)
     filetext = re.sub('#PBS -l *cput=(\d+)', '#PBS -l cput=%s'% cput , filetext)
