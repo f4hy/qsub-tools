@@ -9,6 +9,7 @@ import readinput
 import os
 import qstat
 from subprocess import call
+from fractions import gcd
 
 # noderange,ppn,sockets,cput
 red_settings = (12, 32, 8, 5000)
@@ -52,26 +53,53 @@ def read(filename):
     # find #PBS -l cput=1000:00:00
     matchcput = re.search('#PBS -l *cput=(\d+)', filetext)
     cput = matchcput.group(1)
-    
+
+    #find CHROMAINPUTFILE="gaugeandmeasuretest.xml"
+    matchxmlfilename = re.search('CHROMAINPUTFILE="(.+)"', filetext)
+
+    xmlfilename = matchxmlfilename.group(1)
+
+    # print xmlfilename
+    if xmlfilename:
+        try:
+            xmlfile = open(xmlfilename)
+            xmlfiletext = xmlfile.read()
+            # match         <nrow>16 16 16 36</nrow>
+            matchlayout = re.search('<nrow>(\d+) (\d+) (\d+) (\d+)</nrow>',xmlfiletext)
+            layout = [int(matchlayout.group(i)) for i in range(1, 5)]
+        except IOError:
+            print "Error! {} file not found".format(xmlfilename)
+            exit(0)
+        except AttributeError:
+            print "WARNING: no chroma config file"
+            layout = None
+
+
     print "Name %s" % name
     print "Nodes %d, PPN %d" % (nodes, ppn)
     print "Queue %s" % queue
     print "cput hours %s" % cput
     print geom
     print "permdir %s" % permdir
+    print "layout %s" % layout
 
-    return (name, nodes, ppn, queue, geom, permdir, cput)
+
+    return (name, nodes, ppn, queue, geom, permdir, cput, layout)
 
 
+
+def factors(n):
+    return [i for i in range(1, n//2 + 1) if not n%i] + [n]
 
 def write(defaults, filename):
     writefile = open(filename)
     filetext = writefile.read()
     writefile.close()
 
-    name, nodes, ppn, queue, geom, permdir, cput = defaults
+    name, nodes, ppn, queue, geom, permdir, cput, layout = defaults
 
     name = readinput.askstring("Set job name", name)
+
 
     if os.uname()[1] == 'erwin':
         qstat.display_usage()
@@ -101,20 +129,31 @@ def write(defaults, filename):
     else:
         permdir = readinput.askdir("Set perm directory", permdir)
 
-    optimalgeom = [1, 1, 1, sockets * nodes]
 
-    if readinput.askyesno("use previous GEOM=%d,%d,%d,%d" % tuple(geom)):
-        pass
-    elif readinput.askyesno("use optimal GEOM=%d,%d,%d,%d" % tuple(optimalgeom)):
+    cores = ppn*nodes
+
+    coresleft = cores
+    optimalgeom = []
+    for latticesize in reversed(layout):
+        print latticesize
+        optimal = gcd(coresleft,latticesize) # put at the begining
+        optimalgeom.insert(0,optimal)
+        coresleft = coresleft / optimal
+
+    if coresleft != 1:
+        print "unable to find optimal geom"
+        optimalgeom = None
+        
+    if optimalgeom and readinput.askyesno("use optimal GEOM=%d,%d,%d,%d" % tuple(optimalgeom)):
         geom = optimalgeom
+    elif readinput.askyesno("use previous GEOM=%d,%d,%d,%d" % tuple(geom)):
+        pass
     else:
         geom = readinput.readgeom(geom)
 
-    
-        
     filetext = re.sub('#PBS -N (.*)', '#PBS -N %s' % name, filetext)
 
-    node_search_text = '#PBS -l nodes=(\d+):ppn=(\d+)' 
+    node_search_text = '#PBS -l nodes=(\d+):ppn=(\d+)'
     node_replace_text = "#PBS -l nodes=%d:ppn=%d" % (nodes, ppn)
     filetext = re.sub(node_search_text, node_replace_text, filetext)
 
