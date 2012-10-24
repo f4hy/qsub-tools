@@ -64,7 +64,12 @@ def read(filename):
     else:
         #find CHROMAINPUTFILE="gaugeandmeasuretest.xml"
         matchxmlfilename = re.search('CHROMAINPUTFILE="(.+)"', filetext)
-        xmlfilename = matchxmlfilename.group(1)
+        try:        
+            xmlfilename = matchxmlfilename.group(1)
+        except AttributeError:
+            print "WARNING: xmlconfig file not found"
+            xmlfilename = None
+            
 
         if xmlfilename:
             try:
