@@ -70,7 +70,7 @@ def read(filename):
             print "WARNING: xmlconfig file not found"
             xmlfilename = None
             
-
+        layout = None
         if xmlfilename:
             try:
                 xmlfile = open(xmlfilename)
@@ -89,9 +89,11 @@ def read(filename):
     print "Nodes %d, PPN %d" % (nodes, ppn)
     print "Queue %s" % queue
     print "cput hours %s" % cput
-    print geom
+    if geom:
+        print geom
     print "permdir %s" % permdir
-    print "layout %s" % layout
+    if layout:
+        print "layout %s" % layout
 
 
     return (name, nodes, ppn, queue, geom, permdir, cput, layout)
