@@ -89,11 +89,11 @@ def read(filename):
     print "Nodes %d, PPN %d" % (nodes, ppn)
     print "Queue %s" % queue
     print "cput hours %s" % cput
+    print "permdir %s" % permdir
     if geom:
         print geom
-    print "permdir %s" % permdir
-    if layout:
-        print "layout %s" % layout
+        if layout:
+            print "layout %s" % layout
 
 
     return (name, nodes, ppn, queue, geom, permdir, cput, layout)
@@ -178,8 +178,6 @@ def write(defaults, filename):
 
     filetext = re.sub('PERMDIR="(.+)"', 'PERMDIR="%s"' % permdir, filetext)
     filetext = re.sub('#PBS -l *cput=(\d+)', '#PBS -l cput=%s'% cput , filetext)
-
-    print filetext
 
     newfilename = filename + ".tosub"
     print "writing %s" % newfilename
