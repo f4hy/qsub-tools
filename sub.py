@@ -11,9 +11,13 @@ import qstat
 from subprocess import call
 from fractions import gcd
 
+
 # noderange,ppn,sockets,cput
 red_settings = (12, 32, 8, 5000)
 other_settings = (8, 8, 2, 1000)
+
+WARNING = '\033[93m'
+ENDC = '\033[0m'
 
 
 def usage():
@@ -136,7 +140,7 @@ def findoptimalgeom(nodes, ppn, layout):
         coresleft = coresleft / optimal
 
     if coresleft != 1:
-        print "unable to find optimal geom"
+        print WARNING + "unable to find optimal geom" + ENDC
         optimalgeom = None
 
     return optimalgeom
@@ -146,7 +150,7 @@ def setgeom(nodes, ppn, layout, geom):
     if layout is not None:
         optgeom = findoptimalgeom(nodes, ppn, layout)
     else:
-        print "No layout set, so optimal geom not checked!"
+        print WARNING + "No layout set, so optimal geom not checked!" + ENDC
         optgeom = None
     if optgeom and readinput.askyesno("use optimal GEOM=%d,%d,%d,%d" % tuple(optgeom)):
         geom = optgeom
@@ -205,7 +209,7 @@ def readgeom():
     try:
         geom = [int(matchgeom.group(i)) for i in range(1, 5)]
     except AttributeError:
-        print "WARNING: Geom not found"
+        print WARNING + "WARNING: Geom not found" + ENDC
         geom = None
     return geom
 
@@ -217,7 +221,7 @@ def readlayout():
     try:
         xmlfilename = matchxmlfilename.group(1)
     except AttributeError:
-        print "WARNING: xmlconfig file not found"
+        print WARNING + "WARNING: xmlconfig file not found" + ENDC
         xmlfilename = None
 
     if xmlfilename:
@@ -229,10 +233,10 @@ def readlayout():
             layout = [int(matchlayout.group(i)) for i in range(1, 5)]
             print layout
         except IOError:
-            print "Error! {} file not found".format(xmlfilename)
+            print WARNING + "Error! {} file not found".format(xmlfilename) + ENDC
             exit(0)
         except AttributeError:
-            print "WARNING: no chroma config file"
+            print WARNING + "WARNING: no chroma config file" + ENDC
             layout = None
     return layout
 
