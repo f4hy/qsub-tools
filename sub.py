@@ -59,7 +59,7 @@ def main():
 
     if serial:
         print "setting serial settings"
-        nodes, ppn, sockets, cput = setparallelsettings(queue, nodes)
+        nodes, ppn, sockets, cput = setserialsettings(queue)
     else:
         print "setting parallel settings"
         nodes, ppn, sockets, cput = setparallelsettings(queue, nodes)
