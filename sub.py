@@ -55,6 +55,8 @@ def main():
 
     queue = setqueue(queue)
 
+    permdir = setpermdir()
+    
     serial = (geom is None)
 
     if serial:
