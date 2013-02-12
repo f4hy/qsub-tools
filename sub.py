@@ -8,6 +8,7 @@ import re
 import readinput
 import os
 import qstat
+import argparse
 from subprocess import call
 from fractions import gcd
 
@@ -20,17 +21,19 @@ WARNING = '\033[93m'
 ENDC = '\033[0m'
 
 
-def usage():
-    print """Usage:
-    sub.py submitscript.sh"""
-    exit(1)
-
 filetext = None
 
 
 def main():
-    if len(sys.argv) != 2:
-        usage()
+    parser = argparse.ArgumentParser(description="Walk through submitting a script with qsub first setting up variables")
+    parser.add_argument("filename", type=str, help="submit script to edit/submit")
+    parser.add_argument("-n", "--name", type=str, help="set the name of the job")
+    parser.add_argument("-c", "--count", type=int, help="number of nodes to run on")
+    parser.add_argument("-q", "--queue", choices=["green", "blue", "cyan", "magenta", "red"], help="queue to submit to")
+    parser.add_argument("-a", "--auto", action="store_true", help="automatically select defaults")
+    parser.add_argument("-d", "--dry", action="store_true", help="dry run, don't submit'")
+    args = parser.parse_args()
+
 
     filename = sys.argv[1]
     readfiletext(filename)
@@ -51,21 +54,32 @@ def main():
         if layout:
             print "layout %s" % layout
 
-    name = readinput.askstring("Set job name", name)
+    if (args.name):
+        print "set name to {}".format(args.name)
+        name = args.name
+    elif not args.auto:         # auto just use the old name as the deafult
+        name = readinput.askstring("Set job name", name)
 
-    queue = setqueue(queue)
+    if (args.queue):
+        print "set queue to {}".format(args.name)
+        queue = args.queue
+    else:
+        queue = setqueue(queue,auto=args.auto)
 
-    permdir = setpermdir()
-    
+    permdir = setpermdir(auto=args.auto)
+
     serial = (geom is None)
+
+    if args.count:
+        nodes = args.count
 
     if serial:
         print "setting serial settings"
         nodes, ppn, sockets, cput = setserialsettings(queue)
     else:
         print "setting parallel settings"
-        nodes, ppn, sockets, cput = setparallelsettings(queue, nodes)
-        geom = setgeom(nodes, ppn, layout, geom)
+        nodes, ppn, sockets, cput = setparallelsettings(queue, nodes, auto=args.auto)
+        geom = setgeom(nodes, ppn, layout, geom, auto=args.auto)
 
     newtext = makereplacements(name, nodes, ppn, queue, geom, permdir, cput)
     newfilename = filename + ".tosub"
@@ -75,18 +89,18 @@ def main():
         outfile.write(newtext)
 
     if os.uname()[1] == 'erwin':
-        if readinput.askyesno("submit %s" % newfilename):
+        if (args.auto and not args.dry) or readinput.askyesno("submit %s" % newfilename):
             print "qsubing %s" % newfilename
             call(["qsub", newfilename])
 
-    if readinput.askyesno("move %s to %s" % (newfilename, filename)):
+    if args.auto or readinput.askyesno("move %s to %s" % (newfilename, filename)):
         print "moving %s to %s" % (newfilename, filename)
         call(["mv", newfilename, filename])
 
     print "done"
 
 
-def setqueue(queue):
+def setqueue(queue, auto=False):
     if os.uname()[1] == 'erwin':
         qstat.display_usage()
         # IF we are on a non red queue currently, find the best one
@@ -97,7 +111,10 @@ def setqueue(queue):
             if queue is None:
                 queue = oldqueue
 
-    return readinput.askqueue(queue)
+    if auto:
+        return queue
+    else:
+        return readinput.askqueue(queue)
 
 
 def setserialsettings(queue):
@@ -110,7 +127,7 @@ def setserialsettings(queue):
     return (nodes, ppn, sockets, cput)
 
 
-def setparallelsettings(queue, previousnodes):
+def setparallelsettings(queue, previousnodes, auto=False):
     if queue == "red":
         noderange, ppn, sockets, cput = red_settings
     else:
@@ -118,11 +135,16 @@ def setparallelsettings(queue, previousnodes):
     sys.stdout.write("select number of nodes (was %d)\n" % previousnodes)
 
     #nodes = readinput.selectchoices(list(range(1,noderange+1)),default=nodes,startnum=1)
+    if auto:
+        return (previousnodes, ppn, sockets, cput)
     nodes = readinput.askrange(1, noderange, previousnodes)
     return (nodes, ppn, sockets, cput)
 
 
-def setpermdir():
+def setpermdir(auto=False):
+    if auto:
+        permdir = os.getcwd()
+        return permdir
     if readinput.askyesno("Set permdir to current dir?\n (%s)" % os.getcwd()):
         permdir = os.getcwd()
     else:
@@ -148,12 +170,19 @@ def findoptimalgeom(nodes, ppn, layout):
     return optimalgeom
 
 
-def setgeom(nodes, ppn, layout, geom):
+def setgeom(nodes, ppn, layout, geom, auto=False):
     if layout is not None:
         optgeom = findoptimalgeom(nodes, ppn, layout)
     else:
         print WARNING + "No layout set, so optimal geom not checked!" + ENDC
         optgeom = None
+
+    if auto:
+        if optgeom:
+            return optgeom
+        else:
+            return geom
+
     if optgeom and readinput.askyesno("use optimal GEOM=%d,%d,%d,%d" % tuple(optgeom)):
         geom = optgeom
     elif readinput.askyesno("use previous GEOM=%d,%d,%d,%d" % tuple(geom)):
