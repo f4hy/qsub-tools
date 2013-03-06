@@ -30,12 +30,22 @@ def main():
     parser.add_argument("-n", "--name", type=str, help="set the name of the job")
     parser.add_argument("-c", "--count", type=int, help="number of nodes to run on")
     parser.add_argument("-q", "--queue", choices=["green", "blue", "cyan", "magenta", "red"], help="queue to submit to")
+    parser.add_argument("-g", "--geom", type=str, help="geom must be in form '1,1,1,1'")
     parser.add_argument("-a", "--auto", action="store_true", help="automatically select defaults")
     parser.add_argument("-d", "--dry", action="store_true", help="dry run, don't submit'")
     args = parser.parse_args()
 
+    try:
+        if args.geom and map(type,[int(i) for i in args.geom.split(",")]) != map(type,[1, 2, 3, 4]):
+            raise ValueError
+        else:
+            print "valid geom"
+    except Exception as e:
+        print "Invalid geom"
+        print e
+        exit(1)
 
-    filename = sys.argv[1]
+    filename = args.filename
     readfiletext(filename)
     name = readname()
     nodes, ppn = readnodes()
@@ -79,7 +89,10 @@ def main():
     else:
         print "setting parallel settings"
         nodes, ppn, sockets, cput = setparallelsettings(queue, nodes, auto=args.auto)
-        geom = setgeom(nodes, ppn, layout, geom, auto=args.auto)
+        if args.geom:
+            geom = (int(i) for i in args.geom.split(","))
+        else:
+            geom = setgeom(nodes, ppn, layout, geom, auto=args.auto)
 
     newtext = makereplacements(name, nodes, ppn, queue, geom, permdir, cput)
     newfilename = filename + ".tosub"
