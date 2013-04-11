@@ -13,8 +13,8 @@ header="""
 
 #PBS -N {}
 #PBS -l nodes=1:ppn=1
-#PBS -o output/output_Yang_Mills_0.$PBS_JOBID
-#PBS -e output/error_Yang_Mills_0.$PBS_JOBID
+#PBS -o output_singlecommand_0.$PBS_JOBID
+#PBS -e output_singlecommand_0.$PBS_JOBID
 #PBS -j oe
 #PBS -l cput=1000:00:00
 #PBS -l pcput=100:00:00
