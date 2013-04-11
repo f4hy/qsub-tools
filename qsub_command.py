@@ -37,8 +37,8 @@ def main():
     tmpfile.write(header.format(args.name, args.queue))
     tmpfile.write(args.command)
     tmpfile.write("\n")
-    call(["qsub", tmpfile.name])
     tmpfile.flush()
+    call(["qsub", tmpfile.name])
     time.sleep(2)
 
 if __name__ == "__main__":
