@@ -12,6 +12,7 @@ header="""
 ##########################
 
 #PBS -N {}
+#PBS -u bfahy
 #PBS -l nodes=1:ppn=1
 #PBS -o output_singlecommand_0.$PBS_JOBID
 #PBS -e output_singlecommand_0.$PBS_JOBID
