@@ -2,6 +2,7 @@
 import argparse
 from tempfile import NamedTemporaryFile
 from subprocess import call
+import time
 header="""
 #!/bin/sh -f
 ##########################
@@ -35,8 +36,10 @@ def main():
     tmpfile = NamedTemporaryFile()
     tmpfile.write(header.format(args.name, args.queue))
     tmpfile.write(args.command)
+    tmpfile.write("\n")
     call(["qsub", tmpfile.name])
-
+    tmpfile.flush()
+    time.sleep(2)
 
 if __name__ == "__main__":
     main()
