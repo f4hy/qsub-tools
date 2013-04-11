@@ -39,7 +39,7 @@ def main():
     tmpfile.write(args.command)
     tmpfile.write("\n")
     tmpfile.flush()
-    call(["qsub", tmpfile.name])
+    call(["/opt/pbs/bin/qsub", tmpfile.name])
     time.sleep(2)
 
 if __name__ == "__main__":
