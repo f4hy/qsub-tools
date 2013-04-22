@@ -37,6 +37,7 @@ def main():
     tmpfile = NamedTemporaryFile()
     tmpfile.write(header.format(args.name, args.queue))
     tmpfile.write("echo {}".format(args.command))
+    tmpfile.write("\n")
     tmpfile.write(args.command)
     tmpfile.write("\n")
     tmpfile.flush()
