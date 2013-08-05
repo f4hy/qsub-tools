@@ -21,7 +21,7 @@ header="""
 #PBS -l pcput=100:00:00
 #PBS -l walltime=100:00:00
 #PBS -q {}
-#PBS -m ae
+#PBS -m a
 #PBS -M bfahy@andrew.cmu.edu
 """
 
