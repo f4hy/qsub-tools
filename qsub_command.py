@@ -32,7 +32,9 @@ def main():
     parser.add_argument("command", type=str, help="command to execute")
     parser.add_argument("-n", "--name", type=str, default="singlecommand", help="set the name of the job")
     parser.add_argument("-q", "--queue", default="red", choices=["green", "blue", "cyan", "magenta", "red"], help="queue to submit to")
+    parser.add_argument("-o", "--options", required=False, action="append", type=str, help="options to pass to qsub")
     args = parser.parse_args()
+
 
     tmpfile = NamedTemporaryFile()
     tmpfile.write(header.format(NAME=args.name, QUEUE=args.queue))
@@ -41,7 +43,13 @@ def main():
     tmpfile.write(args.command)
     tmpfile.write("\n")
     tmpfile.flush()
-    call(["/opt/pbs/bin/qsub", tmpfile.name])
+    if args.options:
+        qsubopts = "-l " + " -l ".join(args.options)
+        call(["/opt/pbs/bin/qsub", qsubopts, tmpfile.name])
+    else:
+        qsubopts = "-ja"
+        call(["/opt/pbs/bin/qsub", tmpfile.name])
+
     time.sleep(2)
 
 if __name__ == "__main__":
