@@ -38,16 +38,17 @@ def main():
 
     tmpfile = NamedTemporaryFile()
     tmpfile.write(header.format(NAME=args.name, QUEUE=args.queue))
+    tmpfile.write("cd /scratch/PBS_${PBS_JOBID}\n")
     tmpfile.write("echo {}".format(args.command))
     tmpfile.write("\n")
     tmpfile.write(args.command)
     tmpfile.write("\n")
     tmpfile.flush()
     if args.options:
-        qsubopts = "-l " + " -l ".join(args.options)
-        call(["/opt/pbs/bin/qsub", qsubopts, tmpfile.name])
+        exelist = ["/opt/pbs/bin/qsub", tmpfile.name]
+        exelist[1:1] = ["-l "+ o for o in args.options]
+        call(exelist)
     else:
-        qsubopts = "-ja"
         call(["/opt/pbs/bin/qsub", tmpfile.name])
 
     time.sleep(2)
