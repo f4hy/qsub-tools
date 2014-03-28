@@ -3,6 +3,7 @@ import argparse
 from tempfile import NamedTemporaryFile
 from subprocess import call
 import time
+import shutil
 header="""
 #!/bin/sh -f
 ##########################
@@ -47,6 +48,7 @@ def main():
     tmpfile.write(args.command)
     tmpfile.write("\n")
     tmpfile.flush()
+    shutil.copyfile(tmpfile.name, "/home/bfahy/last_runscript.txt")
     #call(["cat", tmpfile.name])
     if args.options:
         exelist = ["/opt/pbs/bin/qsub", tmpfile.name]
