@@ -40,8 +40,8 @@ def main():
 
     tmpfile = NamedTemporaryFile()
     tmpfile.write(header.format(NAME=args.name, QUEUE=args.queue))
-    if args.wait:
-        tmpfile.write("#PBS -W depend=afterok:{}\n".format(":".join(args.wait)))
+    if any(args.wait):
+        tmpfile.write("#PBS -W depend=afterok:{}\n".format(":".join([i for i in args.wait if i])))
     tmpfile.write("cd /scratch/PBS_${PBS_JOBID}\n")
     tmpfile.write("echo {}".format(args.command))
     tmpfile.write("\n")
