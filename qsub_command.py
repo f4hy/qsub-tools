@@ -4,6 +4,8 @@ from tempfile import NamedTemporaryFile
 from subprocess import call
 import time
 import shutil
+import readinput
+import sys
 header="""
 #!/bin/sh -f
 ##########################
@@ -35,29 +37,44 @@ def main():
     parser.add_argument("-W", "--wait", type=str, action="append", required=False, help="have job depend upon annother")
     parser.add_argument("-q", "--queue", default="red", choices=["green", "blue", "cyan", "magenta", "red"], help="queue to submit to")
     parser.add_argument("-o", "--options", required=False, action="append", type=str, help="options to pass to qsub")
+    parser.add_argument("-a", "--ask", action="store_true", help="ask before submitting")
+    parser.add_argument("-d", "--dry_run", action="store_true", help="don't submit, just show what would be'")
+
     args = parser.parse_args()
 
 
     tmpfile = NamedTemporaryFile()
     tmpfile.write(header.format(NAME=args.name, QUEUE=args.queue))
-    if any(args.wait):
+    if args.wait and any(args.wait):
         tmpfile.write("#PBS -W depend=afterok:{}\n".format(":".join([i for i in args.wait if i])))
     tmpfile.write("cd /scratch/PBS_${PBS_JOBID}\n")
-    tmpfile.write("echo {}".format(args.command))
+    tmpfile.write("echo 'executing: {}'".format(args.command))
     tmpfile.write("\n")
-    tmpfile.write(args.command)
+    tmpfile.write(args.command.replace(";", ";\n"))
     tmpfile.write("\n")
     tmpfile.flush()
     shutil.copyfile(tmpfile.name, "/home/bfahy/last_runscript.txt")
-    #call(["cat", tmpfile.name])
+    def call_wrap(e):
+        if args.dry_run:
+            sys.stderr.write("would have ran {} on:".format(repr(e)))
+            with open(tmpfile.name, 'r') as f:
+                sys.stderr.write(f.read())
+            print "FAKEJOBIDNUMBER"
+        else:
+            if args.ask:
+                if readinput.askyesno("execute {} on {} called {}".format(args.command, args.queue, args.name), default=False):
+                    call(e)
+                    time.sleep(2)
+            else:
+                call(e)
+                time.sleep(2)
+
     if args.options:
         exelist = ["/opt/pbs/bin/qsub", tmpfile.name]
         exelist[1:1] = ["-l "+ o for o in args.options]
-        call(exelist)
+        call_wrap(exelist)
     else:
-        call(["/opt/pbs/bin/qsub", tmpfile.name])
-
-    time.sleep(2)
+        call_wrap(["/opt/pbs/bin/qsub", tmpfile.name])
 
 if __name__ == "__main__":
     main()
